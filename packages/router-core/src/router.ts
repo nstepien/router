@@ -938,24 +938,49 @@ export function runRouteLifecycle(
     if (owner && router._tx !== owner) {
       return
     }
-    if (!matches.some((candidate) => candidate.routeId === match.routeId)) {
+    if (
+      matches.find(
+        (candidate) =>
+          candidate.routeId === match.routeId ||
+          candidate.status === 'error' ||
+          candidate.status === 'notFound' ||
+          candidate._notFound,
+      )?.routeId !== match.routeId
+    ) {
       ;(router.routesById as Record<string, AnyRoute>)[
         match.routeId
       ]!.options.onLeave?.(match)
+    }
+    if (
+      match.status === 'error' ||
+      match.status === 'notFound' ||
+      match._notFound
+    ) {
+      break
     }
   }
   for (const match of matches) {
     if (owner && router._tx !== owner) {
       return
     }
-    const route = (router.routesById as Record<string, AnyRoute>)[
-      match.routeId
-    ]!
-    route.options[
-      previous.some((candidate) => candidate.routeId === match.routeId)
+    ;(router.routesById as Record<string, AnyRoute>)[match.routeId]!.options[
+      previous.find(
+        (candidate) =>
+          candidate.routeId === match.routeId ||
+          candidate.status === 'error' ||
+          candidate.status === 'notFound' ||
+          candidate._notFound,
+      )?.routeId === match.routeId
         ? 'onStay'
         : 'onEnter'
     ]?.(match)
+    if (
+      match.status === 'error' ||
+      match.status === 'notFound' ||
+      match._notFound
+    ) {
+      break
+    }
   }
 }
 
